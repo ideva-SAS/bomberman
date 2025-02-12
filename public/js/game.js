@@ -82,21 +82,51 @@ window.addEventListener('DOMContentLoaded', () => {
 
         // Variables pour le contrôle de la caméra
         let isDragging = false;
-        let lastMouseX = 0;
-        let lastMouseY = 0;
+        let lastX = 0;
+        let lastY = 0;
 
-        // Gestionnaires d'événements de la souris
+        // Support souris
         canvas.addEventListener("mousedown", (evt) => {
             isDragging = true;
-            lastMouseX = evt.clientX;
-            lastMouseY = evt.clientY;
+            lastX = evt.clientX;
+            lastY = evt.clientY;
         });
 
         canvas.addEventListener("mousemove", (evt) => {
             if (!isDragging) return;
+            handleCameraMovement(evt.clientX, evt.clientY);
+        });
 
-            const deltaX = evt.clientX - lastMouseX;
-            const deltaY = evt.clientY - lastMouseY;
+        canvas.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+
+        // Support pavé tactile
+        canvas.addEventListener("touchstart", (evt) => {
+            isDragging = true;
+            lastX = evt.touches[0].clientX;
+            lastY = evt.touches[0].clientY;
+            evt.preventDefault(); // Empêcher le défilement
+        });
+
+        canvas.addEventListener("touchmove", (evt) => {
+            if (!isDragging) return;
+            handleCameraMovement(evt.touches[0].clientX, evt.touches[0].clientY);
+            evt.preventDefault(); // Empêcher le défilement
+        });
+
+        canvas.addEventListener("touchend", () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener("touchcancel", () => {
+            isDragging = false;
+        });
+
+        // Fonction commune pour gérer le mouvement de la caméra
+        function handleCameraMovement(currentX, currentY) {
+            const deltaX = currentX - lastX;
+            const deltaY = currentY - lastY;
 
             // Ajuster la rotation horizontale (gauche/droite)
             camera.rotationOffset += deltaX * CAMERA_SENSITIVITY;
@@ -110,19 +140,23 @@ window.addEventListener('DOMContentLoaded', () => {
                                         Math.min(CAMERA_MAX_HEIGHT, 
                                                camera.heightOffset));
 
-            lastMouseX = evt.clientX;
-            lastMouseY = evt.clientY;
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        // Double-tap/double-clic pour réinitialiser la vue
+        let lastTap = 0;
+        canvas.addEventListener("touchend", (evt) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) {
+                camera.heightOffset = CAMERA_DEFAULT_HEIGHT;
+                camera.rotationOffset = CAMERA_DEFAULT_ROTATION;
+                evt.preventDefault();
+            }
+            lastTap = currentTime;
         });
 
-        canvas.addEventListener("mouseup", () => {
-            isDragging = false;
-        });
-
-        canvas.addEventListener("mouseleave", () => {
-            isDragging = false;
-        });
-
-        // Double-clic pour réinitialiser la vue
         canvas.addEventListener("dblclick", () => {
             camera.heightOffset = CAMERA_DEFAULT_HEIGHT;
             camera.rotationOffset = CAMERA_DEFAULT_ROTATION;
