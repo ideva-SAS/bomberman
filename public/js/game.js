@@ -4,67 +4,65 @@ window.addEventListener('DOMContentLoaded', () => {
     const engine = new BABYLON.Engine(canvas, true);
 
     // Configuration de la grille
-    const GRID_SIZE = 61; // Doit être impair pour le labyrinthe
+    const GRID_SIZE = 61;
     const CELL_SIZE = 1;
     const WALL_HEIGHT = 1;
-    const WALL_PROBABILITY = 0.3; // Augmenté pour plus de murs destructibles
+    const WALL_WIDTH = 0.7; // Murs plus fins
+    const WALL_PROBABILITY = 0.3;
     const BOMB_TIMER = 3000;
     const EXPLOSION_DURATION = 1000;
     const EXPLOSION_RANGE = 3;
 
     // Fonction pour générer le labyrinthe
     function generateMaze(width, height) {
-        // Initialiser la grille avec des murs partout
         const maze = Array(height).fill().map(() => Array(width).fill(1));
         
-        // Fonction pour vérifier si une cellule est valide et non visitée
         function isValid(x, y) {
             return x >= 0 && x < width && y >= 0 && y < height && maze[y][x] === 1;
         }
 
-        // Fonction récursive pour creuser le labyrinthe
         function carve(x, y) {
-            maze[y][x] = 0; // Marquer comme chemin
+            maze[y][x] = 0;
 
-            // Directions possibles (haut, droite, bas, gauche)
             const directions = [
                 [0, -2], [2, 0], [0, 2], [-2, 0]
             ].sort(() => Math.random() - 0.5);
 
-            // Explorer chaque direction
             for (const [dx, dy] of directions) {
                 const newX = x + dx;
                 const newY = y + dy;
 
                 if (isValid(newX, newY)) {
-                    maze[y + dy/2][x + dx/2] = 0; // Creuser le mur entre les cellules
+                    maze[y + dy/2][x + dx/2] = 0;
                     carve(newX, newY);
                 }
             }
         }
 
-        // Commencer à une position aléatoire
         const startX = 1;
         const startY = 1;
         carve(startX, startY);
+
+        // Garantir une zone de départ libre
+        maze[1][1] = 0;
+        maze[1][2] = 0;
+        maze[2][1] = 0;
+        maze[2][2] = 0;
 
         return maze;
     }
 
     const createScene = () => {
-        // Création de la scène
         const scene = new BABYLON.Scene(engine);
         scene.collisionsEnabled = true;
         scene.clearColor = new BABYLON.Color4(0.2, 0.2, 0.3, 1);
 
-        // Création de la caméra
         const camera = new BABYLON.FollowCamera(
             "followCam",
             new BABYLON.Vector3(0, 0, 0),
             scene
         );
         
-        // Configuration de la caméra
         camera.radius = 15;
         camera.heightOffset = 12;
         camera.rotationOffset = 180;
@@ -72,7 +70,6 @@ window.addEventListener('DOMContentLoaded', () => {
         camera.maxCameraSpeed = 10;
         camera.inputs.clear();
 
-        // Création de la lumière
         const light = new BABYLON.HemisphericLight(
             "light",
             new BABYLON.Vector3(1, 1, 0),
@@ -80,7 +77,6 @@ window.addEventListener('DOMContentLoaded', () => {
         );
         light.intensity = 0.7;
 
-        // Création du sol
         const ground = BABYLON.MeshBuilder.CreateGround(
             "ground",
             { width: GRID_SIZE, height: GRID_SIZE, subdivisions: GRID_SIZE },
@@ -92,7 +88,6 @@ window.addEventListener('DOMContentLoaded', () => {
         ground.material = groundMaterial;
         ground.checkCollisions = true;
 
-        // Matériaux
         const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
         wallMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.4);
 
@@ -102,21 +97,17 @@ window.addEventListener('DOMContentLoaded', () => {
         const bombMaterial = new BABYLON.StandardMaterial("bombMaterial", scene);
         bombMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
 
-        // Générer le labyrinthe
         const maze = generateMaze((GRID_SIZE-1)/2, (GRID_SIZE-1)/2);
-        
-        // Structure pour stocker les murs
         const walls = new Map();
 
         // Création des murs selon le labyrinthe
         for (let x = 0; x < GRID_SIZE; x++) {
             for (let z = 0; z < GRID_SIZE; z++) {
-                // Murs invisibles sur les bords
                 if (x === 0 || x === GRID_SIZE - 1 || z === 0 || z === GRID_SIZE - 1) {
                     const wall = BABYLON.MeshBuilder.CreateBox("wall", {
                         height: WALL_HEIGHT,
-                        width: CELL_SIZE,
-                        depth: CELL_SIZE
+                        width: WALL_WIDTH,
+                        depth: WALL_WIDTH
                     }, scene);
                     wall.position = new BABYLON.Vector3(
                         x - GRID_SIZE/2 + CELL_SIZE/2,
@@ -128,16 +119,18 @@ window.addEventListener('DOMContentLoaded', () => {
                     wall.destructible = false;
                     walls.set(`${x},${z}`, wall);
                 }
-                // Murs du labyrinthe
                 else {
                     const mazeX = Math.floor(x/2);
                     const mazeZ = Math.floor(z/2);
                     
+                    // Ne pas placer de murs dans la zone de départ
+                    if (x <= 3 && z <= 3) continue;
+
                     if (maze[mazeZ] && maze[mazeZ][mazeX] === 1) {
                         const wall = BABYLON.MeshBuilder.CreateBox("wall", {
                             height: WALL_HEIGHT,
-                            width: CELL_SIZE,
-                            depth: CELL_SIZE
+                            width: WALL_WIDTH,
+                            depth: WALL_WIDTH
                         }, scene);
                         wall.position = new BABYLON.Vector3(
                             x - GRID_SIZE/2 + CELL_SIZE/2,
@@ -149,12 +142,11 @@ window.addEventListener('DOMContentLoaded', () => {
                         wall.destructible = false;
                         walls.set(`${x},${z}`, wall);
                     }
-                    // Murs destructibles aléatoires dans les espaces vides
                     else if (maze[mazeZ] && maze[mazeZ][mazeX] === 0 && Math.random() < WALL_PROBABILITY) {
                         const wall = BABYLON.MeshBuilder.CreateBox("wall", {
                             height: WALL_HEIGHT,
-                            width: CELL_SIZE,
-                            depth: CELL_SIZE
+                            width: WALL_WIDTH,
+                            depth: WALL_WIDTH
                         }, scene);
                         wall.position = new BABYLON.Vector3(
                             x - GRID_SIZE/2 + CELL_SIZE/2,
@@ -170,7 +162,6 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Création du joueur avec des faces colorées
         const player = BABYLON.MeshBuilder.CreateBox("player", { 
             height: 0.8,
             width: 0.8,
@@ -185,29 +176,25 @@ window.addEventListener('DOMContentLoaded', () => {
             ]
         }, scene);
         
-        // Placer le joueur dans une zone libre près du coin
+        // Position de départ garantie libre
         player.position = new BABYLON.Vector3(-GRID_SIZE/2 + 1.5, 0.4, -GRID_SIZE/2 + 1.5);
         player.checkCollisions = true;
-        player.ellipsoid = new BABYLON.Vector3(0.4, 0.4, 0.4);
+        player.ellipsoid = new BABYLON.Vector3(0.35, 0.35, 0.35); // Hitbox plus petite
         player.ellipsoidOffset = new BABYLON.Vector3(0, 0.4, 0);
 
-        // Attacher la caméra au joueur
         camera.lockedTarget = player;
 
-        // Système de mouvement et bombes
         let inputMap = {};
         const ROTATION_SPEED = 0.05;
         const MOVEMENT_SPEED = 0.15;
         let canPlaceBomb = true;
         
-        // Fonction pour obtenir les coordonnées de grille
         const getGridPosition = (position) => {
             const x = Math.round(position.x + GRID_SIZE/2 - CELL_SIZE/2);
             const z = Math.round(position.z + GRID_SIZE/2 - CELL_SIZE/2);
             return { x, z };
         };
 
-        // Fonction pour créer une explosion
         const createExplosion = (position, range) => {
             const explosion = BABYLON.MeshBuilder.CreateSphere("explosion", {
                 diameter: 1
@@ -239,7 +226,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 explosion.dispose();
             });
 
-            // Vérifier les collisions avec les murs
             const gridPos = getGridPosition(position);
             const directions = [
                 { x: 1, z: 0 }, { x: -1, z: 0 }, 
@@ -263,7 +249,6 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         };
 
-        // Fonction pour placer une bombe
         const placeBomb = () => {
             if (!canPlaceBomb) return;
             
@@ -325,7 +310,6 @@ window.addEventListener('DOMContentLoaded', () => {
             )
         );
 
-        // Mise à jour du mouvement
         scene.registerBeforeRender(() => {
             if (inputMap["ArrowLeft"]) {
                 player.rotation.y -= ROTATION_SPEED;
