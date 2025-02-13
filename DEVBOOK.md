@@ -91,6 +91,22 @@ Toutes les textures sont maintenant hébergées localement et proviennent de Pol
   - Ajout des textures de sol (herbe) depuis Poly Haven
   - Utilisation du système PBR de Babylon.js pour un rendu réaliste
 
+### 13 Février 2025
+
+### Modifications du terrain
+- Réduction de la taille de la carte de 61x61 à 21x21 pour un gameplay plus compact
+- Remplacement du sol plat par 4 niveaux de cubes de 1x1x1
+- Ajustement des murs à des dimensions de 1x1x1 pour un style plus cubique (Minecraft-like)
+- Ajustement du personnage à 0.8x0.8x0.8 pour passer facilement entre les murs
+
+### Améliorations de la caméra
+- Ajout d'un système de réinitialisation automatique de la rotation horizontale
+  - La caméra revient automatiquement derrière le joueur après 10 secondes d'inactivité
+  - Animation fluide de 1 seconde pour le retour à la position d'origine
+  - Ne réinitialise que la rotation horizontale, pas la hauteur
+  - Le timer se réinitialise à chaque mouvement de la caméra
+  - Double-clic toujours disponible pour réinitialisation immédiate
+
 ### Points d'attention
 - Maintenir la jouabilité comme priorité lors de l'ajout des graphismes
 - Tester chaque nouvelle texture individuellement

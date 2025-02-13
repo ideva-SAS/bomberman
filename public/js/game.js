@@ -152,42 +152,73 @@ window.addEventListener('DOMContentLoaded', () => {
 
         // Variables pour le contrôle de la caméra
         let isDragging = false;
-        let lastX = 0;
-        let lastY = 0;
+        let lastPointerX = 0;
+        let lastPointerY = 0;
+        let lastClickTime = 0;
+        let lastCameraMove = Date.now();
+        let cameraResetTimeout = null;
+        const CAMERA_RESET_DELAY = 10000; // 10 secondes
 
-        // Support pour les événements pointeur (fonctionne mieux sur Mac)
+        // Fonction pour réinitialiser la rotation horizontale de la caméra
+        const resetCameraRotation = () => {
+            // Animation de retour à la position d'origine
+            const currentRotation = camera.rotationOffset;
+            const duration = 1000; // 1 seconde pour l'animation
+            const fps = 60;
+            const totalFrames = duration * fps / 1000;
+            let frame = 0;
+
+            const animate = () => {
+                if (frame >= totalFrames) {
+                    camera.rotationOffset = CAMERA_DEFAULT_ROTATION;
+                    return;
+                }
+
+                frame++;
+                const progress = frame / totalFrames;
+                // Utiliser une fonction d'easing pour une animation plus fluide
+                const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+                
+                camera.rotationOffset = currentRotation + (CAMERA_DEFAULT_ROTATION - currentRotation) * easeProgress;
+                requestAnimationFrame(animate);
+            };
+
+            animate();
+        };
+
+        // Gestionnaires d'événements pointeur (fonctionne avec souris et pavé tactile)
         canvas.addEventListener("pointerdown", (evt) => {
             isDragging = true;
-            lastX = evt.clientX;
-            lastY = evt.clientY;
-            canvas.setPointerCapture(evt.pointerId);
+            lastPointerX = evt.clientX;
+            lastPointerY = evt.clientY;
+            
+            // Annuler le timeout de réinitialisation si on commence à bouger la caméra
+            if (cameraResetTimeout) {
+                clearTimeout(cameraResetTimeout);
+                cameraResetTimeout = null;
+            }
         });
 
         canvas.addEventListener("pointermove", (evt) => {
             if (!isDragging) return;
-            handleCameraMovement(evt.clientX, evt.clientY);
-        });
 
-        canvas.addEventListener("pointerup", (evt) => {
-            isDragging = false;
-            canvas.releasePointerCapture(evt.pointerId);
-        });
-
-        canvas.addEventListener("pointercancel", (evt) => {
-            isDragging = false;
-            canvas.releasePointerCapture(evt.pointerId);
-        });
-
-        // Fonction commune pour gérer le mouvement de la caméra
-        function handleCameraMovement(currentX, currentY) {
-            const deltaX = (currentX - lastX) * 0.5; // Réduit la sensibilité
-            const deltaY = (currentY - lastY) * 0.5;
+            const deltaX = evt.clientX - lastPointerX;
+            const deltaY = evt.clientY - lastPointerY;
 
             // Ajuster la rotation horizontale (gauche/droite)
-            camera.rotationOffset += deltaX * CAMERA_SENSITIVITY;
-            camera.rotationOffset = Math.max(CAMERA_MIN_ROTATION, 
-                                          Math.min(CAMERA_MAX_ROTATION, 
-                                                 camera.rotationOffset));
+            if (deltaX !== 0) {
+                camera.rotationOffset += deltaX * CAMERA_SENSITIVITY;
+                camera.rotationOffset = Math.max(CAMERA_MIN_ROTATION, 
+                                            Math.min(CAMERA_MAX_ROTATION, 
+                                                    camera.rotationOffset));
+                lastCameraMove = Date.now();
+                
+                // Réinitialiser le timeout à chaque mouvement horizontal
+                if (cameraResetTimeout) {
+                    clearTimeout(cameraResetTimeout);
+                }
+                cameraResetTimeout = setTimeout(resetCameraRotation, CAMERA_RESET_DELAY);
+            }
 
             // Ajuster la hauteur (haut/bas)
             camera.heightOffset -= deltaY * CAMERA_SENSITIVITY;
@@ -195,19 +226,27 @@ window.addEventListener('DOMContentLoaded', () => {
                                         Math.min(CAMERA_MAX_HEIGHT, 
                                                camera.heightOffset));
 
-            lastX = currentX;
-            lastY = currentY;
-        }
+            lastPointerX = evt.clientX;
+            lastPointerY = evt.clientY;
+        });
 
-        // Double-clic/tap pour réinitialiser la vue
-        let lastClickTime = 0;
+        canvas.addEventListener("pointerup", () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener("pointerleave", () => {
+            isDragging = false;
+        });
+
+        // Double-clic pour réinitialiser la vue immédiatement
         canvas.addEventListener("click", (evt) => {
-            const currentTime = new Date().getTime();
-            const clickLength = currentTime - lastClickTime;
-            if (clickLength < 300 && clickLength > 0) {
-                camera.heightOffset = CAMERA_DEFAULT_HEIGHT;
-                camera.rotationOffset = CAMERA_DEFAULT_ROTATION;
-                evt.preventDefault();
+            const currentTime = Date.now();
+            if (currentTime - lastClickTime < 300) { // Double-clic détecté
+                if (cameraResetTimeout) {
+                    clearTimeout(cameraResetTimeout);
+                    cameraResetTimeout = null;
+                }
+                resetCameraRotation();
             }
             lastClickTime = currentTime;
         });
