@@ -1,85 +1,64 @@
 # Carnet de Développement - BomberMan 3D
 
-## Phase 1 : Setup & Architecture
+## Phase 1 : Setup & Architecture ✅
 - [x] Mise en place de l'environnement de développement
 - [x] Configuration du projet Babylon.js
 - [x] Setup du serveur Node.js
-- [ ] Configuration de la base de données MongoDB
-- [ ] Mise en place du système de build et déploiement
+- [x] Système de build de base
 
-## Phase 2 : Core Engine
+## Phase 2 : Core Engine ✅
 - [x] Implémentation de la grille de jeu 3D
 - [x] Système de caméra isométrique
-- [ ] Gestion des collisions
-- [ ] Système de physique de base
-- [ ] Système d'input (clavier/souris/touch)
+- [x] Gestion des collisions
+- [x] Système de physique de base
+- [x] Système d'input (clavier/souris)
 
-## Phase 3 : Gameplay de Base
-- [ ] Déplacement des personnages
-- [ ] Système de pose de bombes
-- [ ] Système d'explosion et destruction
-- [ ] Détection de mort des personnages
-- [ ] Système de power-ups basique
+## Phase 3 : Gameplay de Base ✅
+- [x] Déplacement du joueur
+- [x] Système de pose de bombes
+- [x] Système d'explosion et destruction
+- [x] Génération procédurale du labyrinthe
+- [x] Murs destructibles et indestructibles
 
-## Phase 4 : Networking
-- [ ] Implémentation WebSocket
-- [ ] Synchronisation des joueurs
-- [ ] Gestion de la latence
-- [ ] Système de rooms
-- [ ] Matchmaking de base
+## Phase 4 : Graphismes et Effets 🚧
+- [ ] Textures haute qualité (Poly Haven)
+  - [ ] Sol (herbe/terre)
+  - [ ] Murs en pierre
+  - [ ] Murs destructibles en bois
+  - [ ] Bombes et explosions
+- [ ] Effets particules
+  - [ ] Explosion des bombes
+  - [ ] Destruction des murs
+  - [ ] Effets d'ambiance
+- [ ] Éclairage et ombres
+  - [ ] Éclairage dynamique
+  - [ ] Ombres portées
+  - [ ] Effets volumétriques
 
-## Phase 5 : UI/UX
+## Phase 5 : UI/UX (À venir)
 - [ ] Menu principal
 - [ ] Interface en jeu
-- [ ] Système de lobby
-- [ ] Chat système
 - [ ] Écrans de fin de partie
+- [ ] Système de score
 
-## Phase 6 : Assets & Graphismes
-- [ ] Modèles 3D des personnages
-- [ ] Textures et matériaux
-- [ ] Animations de base
-- [ ] Effets particules
-- [ ] UI/UX Design finalisé
-
-## Phase 7 : Audio
-- [ ] Implémentation du système audio
+## Phase 6 : Audio (À venir)
 - [ ] Musique de fond
 - [ ] Effets sonores
-- [ ] Voix des personnages
 - [ ] Sons spatialisés
 
-## Phase 8 : Features Avancées
-- [ ] Système de compte utilisateur
-- [ ] Classement et statistiques
-- [ ] Système de progression
-- [ ] Customisation des personnages
-- [ ] Achievements
+## Notes de Développement
 
-## Phase 9 : Modes de Jeu
-- [ ] Mode Battle Royale
-- [ ] Mode Équipe
-- [ ] Mode Entraînement
-- [ ] Parties personnalisées
-- [ ] Système de tournoi
+### 13/02/2025
+- Version de base fonctionnelle avec :
+  - Déplacements fluides du joueur (ZQSD/WASD)
+  - Caméra isométrique avec contrôles à la souris
+  - Système de bombes et explosions
+  - Génération de labyrinthe avec murs destructibles
+  - Collisions et physique de base
+- Prochaine étape : Intégration des textures haute qualité de Poly Haven
 
-## Phase 10 : Polissage & Optimisation
-- [ ] Optimisation des performances
-- [ ] Tests de charge
-- [ ] Debug et corrections de bugs
-- [ ] Équilibrage du gameplay
-- [ ] Tests utilisateurs
-
-## Phase 11 : Monétisation
-- [ ] Système de boutique
-- [ ] Intégration des paiements
-- [ ] Pass de combat
-- [ ] Système de récompenses
-- [ ] Analytics et métriques
-
-## Phase 12 : Déploiement
-- [ ] Tests finaux
-- [ ] Documentation
-- [ ] Déploiement beta
-- [ ] Marketing et communication
-- [ ] Launch!
+### Points d'attention
+- Maintenir la jouabilité comme priorité lors de l'ajout des graphismes
+- Tester chaque nouvelle texture individuellement
+- Garder un point de restauration Git pour la version de base fonctionnelle
+- Optimiser les textures pour les performances
