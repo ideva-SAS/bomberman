@@ -5,12 +5,20 @@ export class MaterialFactory {
     }
 
     _loadTextures() {
-        // Textures pour le sol (style arène fantasy)
-        this.groundTextures = {
+        // Textures pour le dessus du sol (style pierre taillée)
+        this.groundTopTextures = {
             albedo: new BABYLON.Texture("assets/textures/ground/stone_tiles/diffuse.jpg", this.scene),
             normal: new BABYLON.Texture("assets/textures/ground/stone_tiles/normal.jpg", this.scene),
             roughness: new BABYLON.Texture("assets/textures/ground/stone_tiles/roughness.jpg", this.scene),
             ao: new BABYLON.Texture("assets/textures/ground/stone_tiles/ao.jpg", this.scene)
+        };
+
+        // Textures pour les côtés du sol (style terre)
+        this.groundSideTextures = {
+            albedo: new BABYLON.Texture("assets/textures/ground/dirt/diffuse.jpg", this.scene),
+            normal: new BABYLON.Texture("assets/textures/ground/dirt/normal.jpg", this.scene),
+            roughness: new BABYLON.Texture("assets/textures/ground/dirt/roughness.jpg", this.scene),
+            ao: new BABYLON.Texture("assets/textures/ground/dirt/ao.jpg", this.scene)
         };
 
         // Textures pour les murs indestructibles (pierre ancienne)
@@ -30,7 +38,7 @@ export class MaterialFactory {
         };
 
         // Configuration des textures
-        [this.groundTextures, this.stoneTextures, this.woodTextures].forEach(textures => {
+        [this.stoneTextures, this.woodTextures].forEach(textures => {
             Object.values(textures).forEach(texture => {
                 texture.uScale = 1;  // Réduit pour éviter la répétition
                 texture.vScale = 1;
@@ -39,65 +47,20 @@ export class MaterialFactory {
     }
 
     createGroundMaterial() {
-        const material = new BABYLON.PBRMaterial("groundMat", this.scene);
-        
-        // Application des textures du sol
-        material.albedoTexture = this.groundTextures.albedo;
-        material.bumpTexture = this.groundTextures.normal;
-        material.ambientOcclusionTexture = this.groundTextures.ao;
-        material.roughnessTexture = this.groundTextures.roughness;
-        
-        material.metallic = 0;
-        material.roughness = 1;
-        material.useAmbientOcclusionFromMetallicTextureRed = true;
-        material.useRoughnessFromMetallicTextureGreen = true;
-        material.useMetallnessFromMetallicTextureBlue = true;
-        
-        material.backFaceCulling = false;
+        const material = new BABYLON.StandardMaterial("groundMaterial", this.scene);
+        material.diffuseColor = new BABYLON.Color3(0.4, 0.8, 0.4); // Vert pour l'herbe
         return material;
     }
 
     createIndestructibleWallMaterial() {
-        const material = new BABYLON.PBRMaterial("indestructibleWallMat", this.scene);
-        
-        // Application des textures des murs indestructibles
-        material.albedoTexture = this.stoneTextures.albedo;
-        material.bumpTexture = this.stoneTextures.normal;
-        material.ambientOcclusionTexture = this.stoneTextures.ao;
-        material.roughnessTexture = this.stoneTextures.roughness;
-        
-        material.metallic = 0;
-        material.roughness = 0.9;
-        material.useAmbientOcclusionFromMetallicTextureRed = true;
-        material.useRoughnessFromMetallicTextureGreen = true;
-        material.useMetallnessFromMetallicTextureBlue = true;
-        
-        // Ajout d'une teinte légèrement bleutée pour un aspect plus froid
-        material.albedoColor = new BABYLON.Color3(0.9, 0.9, 1.0);
-        
-        material.backFaceCulling = false;
+        const material = new BABYLON.StandardMaterial("indestructibleWallMaterial", this.scene);
+        material.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2); // Gris foncé
         return material;
     }
 
     createDestructibleWallMaterial() {
-        const material = new BABYLON.PBRMaterial("destructibleWallMat", this.scene);
-        
-        // Application des textures des murs destructibles
-        material.albedoTexture = this.woodTextures.albedo;
-        material.bumpTexture = this.woodTextures.normal;
-        material.ambientOcclusionTexture = this.woodTextures.ao;
-        material.roughnessTexture = this.woodTextures.roughness;
-        
-        material.metallic = 0;
-        material.roughness = 0.8;
-        material.useAmbientOcclusionFromMetallicTextureRed = true;
-        material.useRoughnessFromMetallicTextureGreen = true;
-        material.useMetallnessFromMetallicTextureBlue = true;
-        
-        // Ajout d'une teinte légèrement chaude pour le bois
-        material.albedoColor = new BABYLON.Color3(1.0, 0.95, 0.9);
-        
-        material.backFaceCulling = false;
+        const material = new BABYLON.StandardMaterial("destructibleWallMaterial", this.scene);
+        material.diffuseColor = new BABYLON.Color3(0.6, 0.4, 0.2); // Marron
         return material;
     }
 

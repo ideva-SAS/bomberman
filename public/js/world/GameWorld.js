@@ -1,4 +1,4 @@
-import { GRID_CONFIG, WALL_CONFIG } from '../config/gameConfig.js';
+import { GRID_CONFIG, WALL_CONFIG, PLAYER_CONFIG } from '../config/gameConfig.js';
 import { MazeGenerator } from './MazeGenerator.js';
 import { MaterialFactory } from '../materials/MaterialFactory.js';
 
@@ -51,25 +51,67 @@ export class GameWorld {
     }
 
     _createGround() {
-        const groundSize = GRID_CONFIG.SIZE * GRID_CONFIG.CELL_SIZE;
-        const ground = BABYLON.MeshBuilder.CreateGround(
-            "ground",
-            { 
-                width: groundSize,
-                height: groundSize,
-                subdivisions: 1
-            },
-            this.scene
-        );
-        ground.receiveShadows = true;
-        ground.material = this.materialFactory.createGroundMaterial();
+        const tiles = [];
+        const blockSize = GRID_CONFIG.CELL_SIZE;
 
-        // Ajuster la position du sol
-        ground.position = new BABYLON.Vector3(
-            (groundSize/2) - GRID_CONFIG.CELL_SIZE,
-            0,
-            (groundSize/2) - GRID_CONFIG.CELL_SIZE
-        );
+        // Créer deux niveaux de blocs pour le sol
+        for (let level = 0; level < 2; level++) {
+            for (let x = 0; x < GRID_CONFIG.SIZE; x++) {
+                for (let z = 0; z < GRID_CONFIG.SIZE; z++) {
+                    // Créer un bloc cubique parfait
+                    const block = BABYLON.MeshBuilder.CreateBox(
+                        `groundBlock_${level}_${x}_${z}`,
+                        {
+                            width: blockSize,
+                            height: blockSize,
+                            depth: blockSize,
+                            updatable: true
+                        },
+                        this.scene
+                    );
+
+                    // Positionner le bloc avec le premier niveau à y=-0.5 et le deuxième à y=0.5
+                    block.position = new BABYLON.Vector3(
+                        x * blockSize + blockSize / 2,
+                        level - 0.5,  
+                        z * blockSize + blockSize / 2
+                    );
+
+                    // Créer les matériaux pour le bloc
+                    if (level === 0) {
+                        // Niveau inférieur : dirt sur toutes les faces
+                        const material = this.materialFactory.createGroundMaterial();
+                        block.material = material;
+                    } else {
+                        // Niveau supérieur : grass_block avec différentes textures
+                        const material = this.materialFactory.createGroundMaterial();
+                        block.material = material;
+                    }
+
+                    // Activer les collisions
+                    block.checkCollisions = true;
+                    block.receiveShadows = true;
+
+                    tiles.push(block);
+                }
+            }
+        }
+
+        // Optimisation : fusionner tous les blocs du même niveau
+        for (let level = 0; level < 2; level++) {
+            const levelTiles = tiles.filter(tile => tile.position.y === (level - 0.5));
+            const merged = BABYLON.Mesh.MergeMeshes(
+                levelTiles,
+                true,
+                true,
+                undefined,
+                false,
+                true
+            );
+            merged.name = `ground_level_${level}`;
+            merged.checkCollisions = true;
+            merged.receiveShadows = true;
+        }
     }
 
     _createWalls() {
@@ -79,23 +121,55 @@ export class GameWorld {
         // Création des matériaux
         const indestructibleMaterial = this.materialFactory.createIndestructibleWallMaterial();
         const destructibleMaterial = this.materialFactory.createDestructibleWallMaterial();
-        const invisibleMaterial = new BABYLON.StandardMaterial("invisibleMat", this.scene);
-        invisibleMaterial.alpha = 0;
 
         for (let x = 0; x < GRID_CONFIG.SIZE; x++) {
             for (let z = 0; z < GRID_CONFIG.SIZE; z++) {
                 if (maze[x][z] === 1) {
-                    // Si c'est un mur de bordure
-                    const isBorder = x === 0 || x === GRID_CONFIG.SIZE - 1 || 
-                                   z === 0 || z === GRID_CONFIG.SIZE - 1;
+                    // Créer le mur avec les bonnes dimensions
+                    const wall = BABYLON.MeshBuilder.CreateBox(
+                        `wall_${x}_${z}`,
+                        {
+                            width: WALL_CONFIG.WIDTH,
+                            height: WALL_CONFIG.HEIGHT,
+                            depth: WALL_CONFIG.DEPTH
+                        },
+                        this.scene
+                    );
+
+                    // Positionner le mur sur le sol (y = 1)
+                    wall.position = new BABYLON.Vector3(
+                        x * GRID_CONFIG.CELL_SIZE + GRID_CONFIG.CELL_SIZE / 2,
+                        1,  
+                        z * GRID_CONFIG.CELL_SIZE + GRID_CONFIG.CELL_SIZE / 2
+                    );
+
+                    wall.material = indestructibleMaterial;
+                    wall.checkCollisions = true;
+                    wall.receiveShadows = true;
                     
-                    if (isBorder) {
-                        this._createWall(x, z, true, invisibleMaterial, WALL_CONFIG.BORDER_HEIGHT);
-                    } else {
-                        this._createWall(x, z, true, indestructibleMaterial, WALL_CONFIG.HEIGHT);
-                    }
+                    this.walls.push(wall);
                 } else if (Math.random() < 0.2 && !this._isNearStart(x, z)) {
-                    this._createWall(x, z, false, destructibleMaterial, WALL_CONFIG.HEIGHT);
+                    const wall = BABYLON.MeshBuilder.CreateBox(
+                        `wall_${x}_${z}`,
+                        {
+                            width: WALL_CONFIG.WIDTH,
+                            height: WALL_CONFIG.HEIGHT,
+                            depth: WALL_CONFIG.DEPTH
+                        },
+                        this.scene
+                    );
+
+                    wall.position = new BABYLON.Vector3(
+                        x * GRID_CONFIG.CELL_SIZE + GRID_CONFIG.CELL_SIZE / 2,
+                        1,  
+                        z * GRID_CONFIG.CELL_SIZE + GRID_CONFIG.CELL_SIZE / 2
+                    );
+
+                    wall.material = destructibleMaterial;
+                    wall.checkCollisions = true;
+                    wall.receiveShadows = true;
+                    
+                    this.walls.push(wall);
                 }
             }
         }
@@ -104,31 +178,6 @@ export class GameWorld {
     _isNearStart(x, z) {
         // Empêche la création de murs destructibles près du point de départ
         return x <= 2 && z <= 2;
-    }
-
-    _createWall(x, z, indestructible, material, height) {
-        const wallSize = GRID_CONFIG.CELL_SIZE;
-        const wall = BABYLON.MeshBuilder.CreateBox(
-            `wall_${x}_${z}`,
-            { 
-                height: height,
-                width: WALL_CONFIG.WIDTH,
-                depth: WALL_CONFIG.DEPTH
-            },
-            this.scene
-        );
-
-        wall.position = new BABYLON.Vector3(
-            x * wallSize,
-            height/2,
-            z * wallSize
-        );
-
-        wall.material = material;
-        wall.destructible = !indestructible;
-        wall.checkCollisions = true;
-        this.shadowGenerator.addShadowCaster(wall);
-        this.walls.push(wall);
     }
 
     getWallAt(x, z) {

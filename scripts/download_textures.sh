@@ -16,7 +16,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Création des dossiers nécessaires
 BASE_DIR="$PROJECT_DIR/public/assets/textures"
-GROUND_DIR="$BASE_DIR/ground/stone_tiles"
+GROUND_DIR="$BASE_DIR/ground"
 STONE_DIR="$BASE_DIR/walls/ancient_stone"
 WOOD_DIR="$BASE_DIR/walls/wooden_barrier"
 ENV_DIR="$BASE_DIR/environment/envmap"
@@ -32,77 +32,54 @@ download_texture() {
     local target_dir=$3
     
     log "Téléchargement de $name dans $target_dir"
-    
-    # Créer un dossier temporaire pour l'extraction
-    local temp_dir=$(mktemp -d)
-    cd "$temp_dir"
-    
-    # Télécharger le fichier ZIP avec vérification
     log "Téléchargement depuis $url"
-    if ! curl -L --fail "$url" -o texture.zip; then
-        log "ERREUR: Impossible de télécharger $url"
-        cd - > /dev/null
-        rm -rf "$temp_dir"
-        return 1
-    fi
     
-    # Vérifier que le fichier ZIP existe et n'est pas vide
-    if [ ! -s texture.zip ]; then
-        log "ERREUR: Le fichier téléchargé est vide"
-        cd - > /dev/null
-        rm -rf "$temp_dir"
-        return 1
-    fi
+    # Créer le répertoire cible s'il n'existe pas
+    mkdir -p "$target_dir"
     
-    # Extraire les fichiers avec vérification
+    # Se déplacer dans le répertoire cible
+    cd "$target_dir" || exit 1
+    
+    # Télécharger le fichier
+    curl -L "$url" -o texture.zip
+    
     log "Extraction des fichiers..."
-    if ! unzip -o texture.zip; then
-        log "ERREUR: Impossible d'extraire texture.zip"
-        cd - > /dev/null
-        rm -rf "$temp_dir"
-        return 1
-    fi
+    unzip -o texture.zip
     
-    # Renommer et déplacer les fichiers vers le dossier cible
-    for f in *Color.png; do
-        if [ -f "$f" ]; then
-            log "Conversion de $f en diffuse.jpg"
-            magick "$f" "$target_dir/diffuse.jpg"
-        fi
-    done
+    # Conversion des fichiers PNG en JPG
+    log "Conversion de *_Color.png en diffuse.jpg"
+    convert *_Color.png diffuse.jpg
     
-    for f in *NormalGL.png; do
-        if [ -f "$f" ]; then
-            log "Conversion de $f en normal.jpg"
-            magick "$f" "$target_dir/normal.jpg"
-        fi
-    done
+    log "Conversion de *_NormalGL.png en normal.jpg"
+    convert *_NormalGL.png normal.jpg
     
-    for f in *Roughness.png; do
-        if [ -f "$f" ]; then
-            log "Conversion de $f en roughness.jpg"
-            magick "$f" "$target_dir/roughness.jpg"
-        fi
-    done
+    log "Conversion de *_Roughness.png en roughness.jpg"
+    convert *_Roughness.png roughness.jpg
     
-    for f in *AmbientOcclusion.png; do
-        if [ -f "$f" ]; then
-            log "Conversion de $f en ao.jpg"
-            magick "$f" "$target_dir/ao.jpg"
-        fi
-    done
+    log "Conversion de *_AmbientOcclusion.png en ao.jpg"
+    convert *_AmbientOcclusion.png ao.jpg
     
     # Nettoyage
-    cd - > /dev/null
-    rm -rf "$temp_dir"
+    rm texture.zip
+    rm *.png
+    rm *.usdc
+    rm *.mtlx
+    
+    # Retourner au répertoire du projet
+    cd "$PROJECT_DIR" || exit 1
     
     log "Traitement de $name terminé"
 }
 
-# Sol - Ground texture
-download_texture "Ground Floor" \
+# Sol - Ground texture (dessus)
+download_texture "Ground Floor Top" \
     "https://ambientcg.com/get?file=Ground068_2K-PNG.zip" \
-    "$GROUND_DIR"
+    "$GROUND_DIR/stone_tiles"
+
+# Sol - Dirt texture (côtés)
+download_texture "Ground Floor Sides" \
+    "https://ambientcg.com/get?file=Ground037_2K-PNG.zip" \
+    "$GROUND_DIR/dirt"
 
 # Murs indestructibles - Rock texture
 download_texture "Rock Wall" \
