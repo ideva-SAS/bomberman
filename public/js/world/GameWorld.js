@@ -19,8 +19,9 @@ export class GameWorld {
             new BABYLON.Vector3(1, 1, 0),
             this.scene
         );
-        mainLight.intensity = 0.7;
+        mainLight.intensity = 1;
         mainLight.groundColor = new BABYLON.Color3(0.2, 0.2, 0.25);
+        mainLight.specular = new BABYLON.Color3(0.3, 0.3, 0.3);
 
         // Lumière directionnelle pour les ombres
         const dirLight = new BABYLON.DirectionalLight(
@@ -28,14 +29,25 @@ export class GameWorld {
             new BABYLON.Vector3(-1, -2, -1),
             this.scene
         );
-        dirLight.intensity = 0.5;
+        dirLight.intensity = 0.7;
         dirLight.position = new BABYLON.Vector3(20, 40, 20);
 
         // Configuration des ombres
-        const shadowGenerator = new BABYLON.ShadowGenerator(1024, dirLight);
+        const shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
         shadowGenerator.useBlurExponentialShadowMap = true;
         shadowGenerator.blurKernel = 32;
+        shadowGenerator.setDarkness(0.2);
+        shadowGenerator.bias = 0.01;
         this.shadowGenerator = shadowGenerator;
+
+        // Lumière d'ambiance pour les recoins
+        const pointLight = new BABYLON.PointLight(
+            "pointLight",
+            new BABYLON.Vector3(0, 10, 0),
+            this.scene
+        );
+        pointLight.intensity = 0.3;
+        pointLight.radius = 20;
     }
 
     _createGround() {

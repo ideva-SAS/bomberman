@@ -1,4 +1,6 @@
 // Attendre que la page soit complètement chargée
+import { MaterialFactory } from './materials/MaterialFactory.js';
+
 window.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('renderCanvas');
     const engine = new BABYLON.Engine(canvas, true);
@@ -64,7 +66,46 @@ window.addEventListener('DOMContentLoaded', () => {
     const createScene = () => {
         const scene = new BABYLON.Scene(engine);
         scene.collisionsEnabled = true;
-        scene.clearColor = new BABYLON.Color4(0.2, 0.2, 0.3, 1);
+        scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.15, 1); // Ambiance plus sombre
+
+        // Configuration de l'éclairage fantasy
+        const mainLight = new BABYLON.HemisphericLight(
+            "mainLight",
+            new BABYLON.Vector3(0, 1, 0),
+            scene
+        );
+        mainLight.intensity = 0.7;
+        mainLight.groundColor = new BABYLON.Color3(0.1, 0.1, 0.2); // Teinte bleutée
+        mainLight.specular = new BABYLON.Color3(0.3, 0.3, 0.4);
+
+        // Lumière directionnelle pour les ombres
+        const dirLight = new BABYLON.DirectionalLight(
+            "dirLight",
+            new BABYLON.Vector3(-1, -2, -1),
+            scene
+        );
+        dirLight.intensity = 0.5;
+        dirLight.shadowMinZ = 1;
+        dirLight.shadowMaxZ = 20;
+
+        // Activation des ombres
+        const shadowGenerator = new BABYLON.ShadowGenerator(1024, dirLight);
+        shadowGenerator.useBlurExponentialShadowMap = true;
+        shadowGenerator.blurScale = 2;
+        shadowGenerator.setDarkness(0.3);
+
+        // Lumière ponctuelle pour l'ambiance
+        const pointLight = new BABYLON.PointLight(
+            "pointLight",
+            new BABYLON.Vector3(0, 4, 0),
+            scene
+        );
+        pointLight.intensity = 0.3;
+        pointLight.radius = 10;
+        pointLight.diffuse = new BABYLON.Color3(0.3, 0.2, 0.5); // Teinte violette
+
+        // Initialisation de MaterialFactory
+        const materialFactory = new MaterialFactory(scene);
 
         // Création de la caméra avec des paramètres ajustables
         const camera = new BABYLON.FollowCamera(
@@ -142,30 +183,17 @@ window.addEventListener('DOMContentLoaded', () => {
             lastClickTime = currentTime;
         });
 
-        const light = new BABYLON.HemisphericLight(
-            "light",
-            new BABYLON.Vector3(1, 1, 0),
-            scene
-        );
-        light.intensity = 0.7;
-
         const ground = BABYLON.MeshBuilder.CreateGround(
             "ground",
             { width: GRID_SIZE, height: GRID_SIZE, subdivisions: GRID_SIZE },
             scene
         );
-        const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
-        groundMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        groundMaterial.wireframe = true;
-        ground.material = groundMaterial;
+        ground.material = materialFactory.createGroundMaterial();
         ground.checkCollisions = true;
 
-        const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-        wallMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.4);
-
-        const indestructibleWallMaterial = new BABYLON.StandardMaterial("indestructibleWallMaterial", scene);
-        indestructibleWallMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.6);
-
+        // Utilisation des matériaux de MaterialFactory
+        const wallMaterial = materialFactory.createDestructibleWallMaterial();
+        const indestructibleWallMaterial = materialFactory.createIndestructibleWallMaterial();
         const bombMaterial = new BABYLON.StandardMaterial("bombMaterial", scene);
         bombMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
 

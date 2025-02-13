@@ -1,20 +1,20 @@
 # Carnet de Développement - BomberMan 3D
 
-## Phase 1 : Setup & Architecture ✅
+## Phase 1 : Setup & Architecture 
 - [x] Mise en place de l'environnement de développement
 - [x] Configuration du projet Babylon.js
 - [x] Setup du serveur Node.js
 - [ ] Configuration de la base de données MongoDB
 - [x] Système de build de base
 
-## Phase 2 : Core Engine ✅
+## Phase 2 : Core Engine 
 - [x] Implémentation de la grille de jeu 3D
 - [x] Système de caméra isométrique
 - [x] Gestion des collisions
 - [x] Système de physique de base
 - [x] Système d'input (clavier/souris)
 
-## Phase 3 : Gameplay de Base ✅
+## Phase 3 : Gameplay de Base 
 - [x] Déplacement du joueur
 - [x] Système de pose de bombes
 - [x] Système d'explosion et destruction
@@ -28,22 +28,39 @@
 - [ ] Système de rooms
 - [ ] Matchmaking de base
 
-## Phase 5 : Graphismes et Effets 🚧
-- [ ] Textures haute qualité (Poly Haven)
-  - [ ] Sol (herbe/terre)
-  - [ ] Murs en pierre
-  - [ ] Murs destructibles en bois
-  - [ ] Bombes et explosions
-- [ ] Effets particules
-  - [ ] Explosion des bombes
-  - [ ] Destruction des murs
-  - [ ] Effets d'ambiance
-- [ ] Éclairage et ombres
-  - [ ] Éclairage dynamique
-  - [ ] Ombres portées
-  - [ ] Effets volumétriques
-- [ ] Modèles 3D des personnages
-- [ ] Animations de base
+## Phase 5 : Intégration des textures et style visuel
+
+### 5.1 Style visuel
+Le jeu adopte maintenant un style fantasy/heroic inspiré de League of Legends et Diablo 4 :
+- Ambiance sombre et mystique
+- Éclairage dynamique avec des touches de magie
+- Textures stylisées de haute qualité
+- Effets visuels fantasy (brume, lueurs magiques)
+
+### 5.2 Textures
+Toutes les textures sont maintenant hébergées localement et proviennent de Poly Haven (licence CC0) :
+- **Sol** : "Stylized Stone Floor 02" - pavés de pierre avec motifs géométriques
+- **Murs indestructibles** : "Stylized Bricks 01" - briques anciennes avec détails fantasy
+- **Murs destructibles** : "Wooden Planks 012" - planches de bois usées
+- **Environment Map** : "Sunset Ruins" - ambiance de ruines au coucher du soleil
+
+### 5.3 Gestion des assets
+- Structure de dossiers organisée dans `public/assets/`
+- Scripts d'automatisation :
+  - `scripts/setup_assets.sh` : Crée la structure de dossiers
+  - `scripts/download_textures.sh` : Télécharge et installe les textures
+
+### 5.4 Améliorations techniques
+- Utilisation du PBR (Physically Based Rendering)
+- Éclairage optimisé avec lumière hémisphérique
+- Effets post-traitement simplifiés pour la performance
+- Textures 2K (2048x2048) pour l'équilibre qualité/performance
+
+### 5.5 Prochaines étapes
+- [ ] Ajouter des effets de particules pour les explosions
+- [ ] Intégrer des effets de brume au niveau du sol
+- [ ] Optimiser les performances de rendu
+- [ ] Ajouter des animations pour les transitions
 
 ## Phase 6 : UI/UX (À venir)
 - [ ] Menu principal
@@ -63,13 +80,16 @@
 ## Notes de Développement
 
 ### 13/02/2025
-- Version de base fonctionnelle avec :
+- Version stable commitée avec :
   - Déplacements fluides du joueur (ZQSD/WASD)
   - Caméra isométrique avec contrôles à la souris
   - Système de bombes et explosions
   - Génération de labyrinthe avec murs destructibles
   - Collisions et physique de base
-- Prochaine étape : Intégration des textures haute qualité de Poly Haven
+- Début de la Phase 5 : Intégration des textures
+  - Mise à jour du MaterialFactory pour supporter les textures PBR
+  - Ajout des textures de sol (herbe) depuis Poly Haven
+  - Utilisation du système PBR de Babylon.js pour un rendu réaliste
 
 ### Points d'attention
 - Maintenir la jouabilité comme priorité lors de l'ajout des graphismes
